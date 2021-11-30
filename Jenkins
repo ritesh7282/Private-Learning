@@ -1,0 +1,440 @@
+Jenkins:
+
+sudo wget -O /etc/yum.repos.d/jenkins.repo     https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+sudo yum upgrade
+sudo yum install -y java-1.8.0-openjdk
+sudo yum install jenkins
+sudo systemctl daemon-reload
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+wget https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz
+wget https://mirrors.estointernet.in/apache/maven/maven-3/3.8.2/binaries/apache-maven-3.8.2-bin.tar.gz
+
+export JAVA_HOME=/opt/java/jdk-9
+export PATH=$PATH:$JAVA_HOME/bin
+PATH=/opt/maven/apache-maven-3.8.2/bin:$PATH
+
+source profile
+
+================================================================================================
+
+#!groovy
+
+pipeline {
+  agent none
+  stages {
+    stage('Maven Install') {
+      agent {
+        docker {
+          image 'maven:3.5.0'
+        }
+      }
+      steps {
+        sh 'mvn clean install'
+      }
+    }
+    stage('Docker Build') {
+      agent any
+      steps {
+        sh 'docker build -t shanem/spring-petclinic:latest .'
+      }
+    }
+    stage('Docker Push') {
+      agent any
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
+          sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+          sh 'docker push shanem/spring-petclinic:latest'
+        }
+      }
+    }
+  }
+}
+
+
+dockerfile:
+
+FROM anapsix/alpine-java 
+LABEL maintainer="shanem@liatrio.com" 
+COPY /target/spring-petclinic-1.5.1.jar /home/spring-petclinic-1.5.1.jar 
+CMD ["java","-jar","/home/spring-petclinic-1.5.1.jar"]
+
+sh 'vim Dockerfile'
+sh 'FROM openjdk-12.0.2' > Dockerfile
+sh ' COPY /target/spring-petclinic-1.5.1.jar /home/spring-petclinic-1.5.1.jar " > Dockerfile
+CM ["java","-jar","/home/spring-petclinic-1.5.1.jar"] > Dockerfile
+
+====================================================================================================
+
+Jenkins SSL
+Obtain SSL certificates
+
+Convert SSL keys to PKCS12 format
+openssl pkcs12 -export -out jenkins.p12 \
+-passout 'pass:your-strong-password' -inkey server.key \
+-in server.crt -certfile ca.crt -name jenkins.devopscube.com
+
+Convert PKCS12 to JKS format
+keytool -importkeystore -srckeystore jenkins.p12 \
+-srcstorepass 'your-secret-password' -srcstoretype PKCS12 \
+-srcalias jenkins.devopscube.com -deststoretype JKS \
+-destkeystore jenkins.jks -deststorepass 'your-secret-password' \
+-destalias jenkins.devopscube.com
+
+Add JKS to Jenkins path
+mkdir -p /etc/jenkins
+cp jenkins_keystore.jks /etc/jenkins/
+
+Configure Jenkins startup to use the JKS file.
+JENKINS_HTTPS_PORT="8443"
+JENKINS_HTTPS_KEYSTORE="/etc/jenkins/jenkins.jks"
+JENKINS_HTTPS_KEYSTORE_PASSWORD="<your-keystore-password>"
+
+Validate Jenkins SSL
+
+
+=================================================================================================
+
+pipeline {
+
+  /*
+   * Run everything on an existing agent configured with a label 'docker'.
+   * This agent will need docker, git and a jdk installed at a minimum.
+   */
+  agent {
+    node {
+      label 'docker'
+    }
+  }
+
+  // using the Timestamper plugin we can add timestamps to the console log
+  options {
+    timestamps()
+  }
+
+  environment {
+    //Use Pipeline Utility Steps plugin to read information from pom.xml into env variables
+    IMAGE = readMavenPom().getArtifactId()
+    VERSION = readMavenPom().getVersion()
+  }
+
+  stages {
+    stage('Build') {
+      agent {
+        docker {
+          /*
+           * Reuse the workspace on the agent defined at top-level of Pipeline but run inside a container.
+           * In this case we are running a container with maven so we don't have to install specific versions
+           * of maven directly on the agent
+           */
+          reuseNode true
+          image 'maven:3.5.0-jdk-8'
+        }
+      }
+      steps {
+        // using the Pipeline Maven plugin we can set maven configuration settings, publish test results, and annotate the Jenkins console
+        withMaven(options: [findbugsPublisher(), junitPublisher(ignoreAttachments: false)]) {
+          sh 'mvn clean findbugs:findbugs package'
+        }
+      }
+      post {
+        success {
+          // we only worry about archiving the jar file if the build steps are successful
+          archiveArtifacts(artifacts: '**/target/*.jar', allowEmptyArchive: true)
+        }
+      }
+    }
+
+    stage('Quality Analysis') {
+      parallel {
+        // run Sonar Scan and Integration tests in parallel. This syntax requires Declarative Pipeline 1.2 or higher
+        stage ('Integration Test') {
+          agent any  //run this stage on any available agent
+          steps {
+            echo 'Run integration tests here...'
+          }
+        }
+        stage('Sonar Scan') {
+          agent {
+            docker {
+              // we can use the same image and workspace as we did previously
+              reuseNode true
+              image 'maven:3.5.0-jdk-8'
+            }
+          }
+          environment {
+            //use 'sonar' credentials scoped only to this stage
+            SONAR = credentials('sonar')
+          }
+          steps {
+            sh 'mvn sonar:sonar -Dsonar.login=$SONAR_PSW'
+          }
+        }
+      }
+    }
+
+    stage('Build and Publish Image') {
+      when {
+        branch 'master'  //only run these steps on the master branch
+      }
+      steps {
+        /*
+         * Multiline strings can be used for larger scripts. It is also possible to put scripts in your shared library
+         * and load them with 'libaryResource'
+         */
+        sh """
+          docker build -t ${IMAGE} .
+          docker tag ${IMAGE} ${IMAGE}:${VERSION}
+          docker push ${IMAGE}:${VERSION}
+        """
+      }
+    }
+  }
+
+  post {
+    failure {
+      // notify users when the Pipeline fails
+      mail to: 'team@example.com',
+          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+          body: "Something is wrong with ${env.BUILD_URL}"
+    }
+  }
+}
+=====================================================================================================================================
+	Global credentils:
+Production-ip
+docker hub credentils
+
+configure system --> Global Properties --> Provide Name and Value.
+
+pipeline{
+	agent none
+	environment{
+		JAVA_HOME=<java-home>
+		maven=<maven-home>
+	}
+	
+	stages {
+		stage('cloning'){
+			steps{
+				git 'https://github.com/ritesh7282/cicd-pipeline-train-schedule-dockerdeploy'
+			}
+		}
+		
+		stage('Building'){
+			steps{
+				sh 'mvn package'
+				archiveArtifacts artifacts: 'dist/trainSchedule.zip'
+			}
+		}
+		
+		stage('Building Images'){
+			when {
+				branch 'master'
+			}
+			
+			steps{
+				script {
+					app=docker.build("ritesh72823912/train-schedule")
+					app.inside{
+						sh 'echo $(curl localhost:8080)'
+				}
+			}
+		}
+		
+		stage('Push Docker image'){
+			when {
+				branch 'master'
+			}
+			
+			steps{
+				script {
+					docker.withRegistry('https://hub.docker.com/','docker_hub_id'){
+						app.push("${env.BUILD_NUMBER}")
+						app.push("latest")
+					}
+				}
+			}
+		}
+		
+		stage('Push to Production'){
+			when {
+				branch 'master'
+			}
+			
+			steps{
+				script {
+					input 'Deploy to Production?'
+					milestone(1)
+					withCredentials([usernamePassword{credentilsId:'webserver_login', usernameVariable: 'USERNAME' , passwordVariable: 'USERPASS' }])
+						script{
+							sh "sshpass -p '$USERNAME' -v ssh -o StrictHostKeyChecking=no $USERNAME$prod_ip \"docker pull ritesh72823912/train-schedule:${env.BUILD_NUMBER}\""
+						}
+						
+						try{
+							sh "sshpass -p '$USERNAME' -v ssh -o StrictHostKeyChecking=no $USERNAME$prod_ip \"docker stop train-schedule""
+							sh "sshpass -p '$USERNAME' -v ssh -o StrictHostKeyChecking=no $USERNAME$prod_ip \"docker rm train-schedule""
+						} catch(err) {
+							echo 'Caught Error: $err'
+						}
+						
+						sh "sshpass -p '$USERNAME' -v ssh -o StrictHostKeyChecking=no $USERNAME$prod_ip \"docker run --restart unless-stopped -p 8080:8080 --name train-schedule -itd ritesh72823912/train-schedule:${env.BUILD_NUMBER}""
+				}
+		}
+		
+		
+	}
+	
+	
+}
+
+================================================================================================================================================================
+
+pipeline {
+    agent any 
+    environment {
+        //once you sign up for Docker hub, use that user_id here
+        registry = "your_docker_user_id/mypythonapp"
+        //- update your credentials ID after creating credentials for connecting to Docker Hub
+        registryCredential = 'fa32f95a-2d3e-4c7b-8f34-11bcc0191d70'
+        dockerImage = ''
+    }
+    
+    stages {
+        stage('Cloning Git') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://bitbucket.org/ananthkannan/mypythonrepo']]])       
+            }
+        }
+    
+    // Building Docker images
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build registry
+        }
+      }
+    }
+         // Uploading Docker images into Docker Hub
+    stage('Upload Image') {
+     steps{    
+         script {
+            docker.withRegistry( '', registryCredential ) {
+            dockerImage.push()
+            }
+        }
+      }
+    }
+    
+     // Stopping Docker containers for cleaner Docker run
+     stage('docker stop container') {
+         steps {
+            sh 'docker ps -f name=mypythonappContainer -q | xargs --no-run-if-empty docker container stop'
+            sh 'docker container ls -a -fname=mypythonappContainer -q | xargs -r docker container rm'
+         }
+       }
+    
+    
+    // Running Docker container, make sure port 8096 is opened in 
+    stage('Docker Run') {
+     steps{
+         script {
+            dockerImage.run("-p 8096:5000 --rm --name mypythonappContainer")
+         }
+      }
+    }
+  }
+}
+======================================================================================================================================
+Some theory for below:
+
+building: True -> requested Job is currently running.
+
+          False -> requested Job is not running now.&nbsp;
+
+Result: SUCCESS -> last build is success
+
+        FAILURE -> last build is failed.
+		
+========================================================
+
+curl https://your_jenkins_endpoint/job/testjob/lastBuild/api/json
+
+=========================================================================
+Checking the status of jenkins job remotely:
+
+import json
+import requests
+import time
+
+
+
+job_name = "testjob"   #Give your job name here
+
+
+def jenkins_job_status(job_name):
+        
+        try:
+                url  = "https://your_jenkins_endpoint/job/%s/lastBuild/api/json" %job_name   #Replace 'your_jenkins_endpoint' with your Jenkins URL
+                while True:
+                        data = requests.get(url).json()
+                        if data['building']:
+                                time.sleep(60)
+                        else:
+                                if data['result'] == "SUCCESS":
+
+                                        print "Job is success"
+                                        return True
+                                else:
+                                        print "Job status failed"
+                                        return False
+
+                
+        except Exception as e:
+                print str(e)
+                return False
+
+
+
+
+if __name__ == "__main__":
+
+        if jenkins_job_status(job_name):
+
+                print "Put your autmation here for 'job is success' condition"
+
+        else:
+                print "Put your autmation here for 'job is failed' condition"                
+	
+	
+======================================================================================================================
+
+Getting the status of the last build og that particular job:
+
+pipeline {
+    agent {
+        node {
+            label 'HostAgent'
+        }
+    }
+    /*  tools {
+              'com.cloudbees.jenkins.plugins.customtools.CustomTool' "sonnarqube scanner"
+         }    */
+    stages {
+        stage('Print status') {
+            steps {
+                script {
+                    def job = jenkins.model.Jenkins.instance.getItemByFullName("Job name")
+                    def result = job.getLastBuild().getResult().toString()
+                    env.result = result
+                }
+                cleanWs()
+                sh 'echo "The result printed inside shell : ${result}"'
+                echo "The result printed outside shell: ${result}"
+            }
+        }
+    }
+}
+
+====================================================================================================================
