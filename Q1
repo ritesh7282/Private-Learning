@@ -1,0 +1,138 @@
+static code analysis --> Sonar Qube
+adding  master -slave application 
+backup for jenkins 
+cleaning the builds
+github token 
+Docker APIs 
+What Service accounts in 
+constraint on namespace
+Cloud Native Certified Kubernetes Administrator 
+Kubernetes Security 
+
+https://www.xelon.ch/en/knowledge-base/setup-kubernetes-cluster/
+https://skalable.net/blogs/technology/jenkins_ha.html
+
+
+		
+Security Grp: (Security group for Kubernetes ELB a1594e70dc21511eaa8eb12f9eb23efc (ingress-nginx/ingress-nginx) )
+		
+9109171423 --> Emorphis Tech --> Neha
+7987021707 --> Cybage --> Ishita
+7875482585 --> Eminence --> Snehal
+9944617240 --> Divya --> Zenfinet
+8105888661 --> ishika --> consultancy
+7409459980 --> Saksi --> TSYS 
+895647513 --> Prachi --> KPIT (Today:- 23 October call her next month)
+9845976176 --> Radhika --> Logistics
+8545989579 -->    Accolite  --> Ashutosh
+0204143200 --> tridiagonal --> Gayatri 
+7995104440 --> fixity --> saijeta
+7756925997 --> nice--> farhaan
+9970620902 --> Snehal --> Globant --> How git will abt the remote repo, How i incurred parameters in declarative script/scripted script, Master/slave configuration, Why not running build jobs in master itseklf, diff rence between maven and m2, Artifactory, Diff between env and arg, how can we build multiple image in one go, HA architecture (Having insances in different AZs, Health checks for instances, ASG,), onprem to cloud infra, cooling and draining period in ASG, private subnet to on-premises (VPC Peering)
+Abhay: Fareye: Can two default VPC talk, Reasons for a pod to be in pending state, ASG (frontend and backend in same ASG), 
+9594566294 --> Sonali --> Ebao Tech
+9133175657 --> Kalyani --> supremenetsoft --> Alltodo 
+9730757132 --> Mayuri --> ebao tech
+8799971942 --> Chitra --> helius --> Wipro
+9306418131 --> Ashish --> UST --> At 2 PM --> Rakesh  --> name of the backup plugin (THinBackup),crontab and backup of jenkins, Shared library in jenkins, Safe restart in jenkins, Jenkins Availability, Gear Plugin, How 2 masters work in jenkins ?, 
+9378905849 / 9479348289  --> Sagar --> flintaas
+9579719784 --> Rutuja --> lnt
+8880192857 --> khushbu --> 
+9284763159 --> Ruchi --> PRGX
+7980938128 --> Sureti --> BMC software
+6364702842 --> Vidhisha --> TCS 
+7017512232 --> Vaibhav  --> Cybage 
+7487950467 --> Swetakshi  --> hexaview -- (private bidge /   dind containers / init containers || kubernetes operator and controller/ kubernetes nginx and ingress, managing etcd )
+9600136182 / 7550190706 --> FIS  --> Vasuki
+8433666025 --> Poonam --> Citius --> (Interviewer - Ravi ) -- 4 PM --> crashloopbackoff, daemon sets in bearmetal for k8s, spot instance automation, IAAS/PAAS/SAAS, Jinja template, what is aplay and playbook, skipping one task in ansible in playbook, Adding new nodes
+8880192857 --> khushbu --> velotio--> 
+9970620902 --> Snehal --> Globant
+9325939677 --> Saraswati --> Bajaj Finance
+9860732274 --> 
+9029024318 --> Anu -->
+8686424895 --> Dinesh --> Wipro
+8880192857 --> Khusbu --> Velotio
+
+
+HTTP 500, HTTP 503, Add even and odd number in a file, Worker nodes filling every time, 
+
+multiple choice question on security groups --> https://quizizz.com/admin/quiz/5c900fbd2c1ee3001af94e79/aws-vpc , https://tutorialslink.com/mcq-quiz/aws-general-multiple-choice-questions-and-answers , https://jayendrapatil.com/aws-vpc-security-group-vs-nacls/
+https://www.hackerrank.com/skills-directory/aws_basic
+
+Current CTC : 6.5 LPA
+Expected CTC: 17 LPA
+Notice Period : Currently Serving (LWD: 15 Dec 2021)
+Current Location : Pune
+Preferred Location : Pune
+Current company : Accenture
+Reason for changing job: Exposure to tools
+Any offer with any organization: Yes, 12.5 LPA (Fixed)
+Exp. In AWS: 3 Years
+
+
+nacl or || 
+ip range, autoscaling in docker swarm, docker curl not working
+
+
+Emorphis:
+rollback
+backup of container
+crashed container
+user cred authorization in container 
+Webserver on premise and rds in cloud	
+
+
+Updated Resume: Attached
+Total Experience: 3 Years 11 Months
+Relevant Experience : 3 Years 5 Months
+Current CTC: 6.5 LPA
+Offer In Hand: 12.5 LPA
+ECTC: 16 LPA
+Notice Period: Serving Notice Period (LWD: 15 Dec 2021)
+Alternate Contact Number ( Must): 8237407129
+Current Location: 
+Willing to work from Chennai/pune/Bangalore After COVID Pandamic: Yes (Pune)
+Skills: AWS, Docker, Kubernetes, Jenkins, Shell Scripting
+
+version: "2"
+services:
+  proxy:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    expose:
+      - 8080
+      - 80
+      - 443
+    networks:
+      client_network:
+          ipv4_address: '192.168.0.5'
+      server_network: null
+    stdin_open: true
+    tty: true
+  test_server:
+    build: ./test_server
+    expose:
+      - 8000
+    networks:
+      - server_network
+  test_client:
+    build: ./test_client
+    networks:
+      - client_network
+    stdin_open: true
+    tty: true
+
+networks:
+  client_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.0.0/24"
+          gateway: "192.168.0.5"
+  server_network:
+    driver: bridge
+	
+	
+	https://www.youtube.com/watch?v=PX8Q9DeH0yw
