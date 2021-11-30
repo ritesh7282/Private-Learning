@@ -34,6 +34,7 @@ kubectl version
 
 kubectl scale deployment/kibana --replicas=2 -n kube-system
 kubectl expose deployment demand-prediction --type=NodePort --name=demand-predictionnodeport -n backend
+kubectl get configmap --all-namespaces -o yaml --export > allcfgmap.yaml
 
 ===============================================================================================================================
 Kubernetes Certs
