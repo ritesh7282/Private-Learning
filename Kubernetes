@@ -1,0 +1,287 @@
+#kubernetes Installation
+#!/bin/sh
+cat << EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+  https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+
+
+yum -y install docker kubeadm
+ 
+systemctl start docker
+systemctl start kubelet
+systemctl enable kubelet
+#Created symlink from /etc/systemd/system/multi-user.target.wants/kubelet.service to /usr/lib/systemd/system/kubelet.service.
+systemctl enable docker
+#Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service.
+
+#docker info | grep -i 'cgroup driver'
+
+kubeadm init --config kubeadm-config.yaml
+export KUBECONFIG=/etc/kubernetes/admin.conf
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl config view
+kubectl version
+
+===================================================================================================================================
+
+kubectl scale deployment/kibana --replicas=2 -n kube-system
+kubectl expose deployment demand-prediction --type=NodePort --name=demand-predictionnodeport -n backend
+
+===============================================================================================================================
+Kubernetes Certs
+cert manager:
+cert manager
+cainjector
+cert-manager-webhook
+
+services
+deployments
+
+To encrypt the cert an issuer.yaml is generated which takes care of the cetificate authority
+Flow:
+Certmanager -> cert request -> ORDER object is generate and a challenge is generated to encrypt it then Certificate completed and used in secrets.
+
+Generating Cert:
+Kubectl:
+Openssl genrsa -out admin.key 2048
+Openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr
+Openssl x509 -req -in admin.csr -CA ca.crt -CAKey ca.key -out admin.crt
+Add grp system:masters only while generating certificate for admin users.
+
+Curl https://kube-apiserver:6443/api/v1/pods --key admin.key --cert admin.crt --cacert ca.crt
+
+API server :
+/etc/kubernetes/pki
+apiserver.crt
+apiserver.key
+
+Etcd:
+	etcd
+has its own cetificate authority
+
+Kubelet: /etc/kubernetes/kubelet.conf
+/var/lib/kubelet/pki/
+kubelet.crt
+kubelet.key
+kubelet-client.pem
+
+controller-manager.conf:
+/etc/kubernetes/controller-manager.conf
+
+kube-proxy:
+/etc/kubernetes/pki
+font-proxy-client.crt
+font-proxy-client.key
+font-proxy-ca.crt
+font-proxy-ca.key
+
+sheduler.conf:
+/etc/kubernetes/scheduler.conf
+============================================================================================================================
+Openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -nout
+
+Jenkins pipeline conditional
+
+Cloudwatch
+Helm - client side called  "helm " server side "tiller-deploy"
+create a service account
+provide proper clusterrole
+initialse helm
+A deployment with tiller-deply
+
+In cloudwatch
+create a grp in logs called "kubernetes"
+And provide proper IAM role to all the nodes to write in cloudwatch
+
+on cluster side install fluentd-cloudwatch as deaemon set and u should be able to get the logs.
+
+=========================================================================================================================
+
+Check expiry date
+
+kubeadm alpha certs check-expiration
+
+Renew certs
+
+kubeadm alpha certs renew all
+
+
+========================
+
+kops get <cluster name> --show-certificate-expiration
+kops update cluster --yes
+kops rolling-update cluster --instance-group-roles=Master --force --cloudonly
+
+=======================================================================================================================
+KOPS vs Kubeadm
+KOPS handles the in a more extensive in compared to kubeadm. hence, while installing a cluster with KOPS, it asks for s3, and VPC CIDR and evrything.Whereas KUbeadm is like a quick start.
+
+============================================================================================================================
+
+master pods sheduling
+
+By default, your Kubernetes Cluster will not schedule pods on the control-plane node for security reasons. It is recommended you keep it this way, but for test environments you may want to schedule Pods on control-plane node to maximize resource usage.
+
+If you want to be able to schedule pods on the Kubernetes control-plane node, you need to remove a taint on the master nodes.
+
+-->  kubectl taint nodes --all node-role.kubernetes.io/master-
+
+--> This will remove the node-role.kubernetes.io/master taint from any nodes that have it, including the control-plane node, meaning that the scheduler will then be able to schedule pods everywhere.
+
+
+============================================================================================================================
+
+Ingress:
+
+VIpin : https://github.com/vipin-k/ingress-controller-domain-name-or-path-based-routing/blob/master/cafe-ingress.yml
+Vipin: 
+Ingress: https://github.com/vipin-k/kubernetes-ingress/blob/master/docs/installation.md
+1. Setting up the TLS cert for 
+2. Providing the RBAC access to the Nginx service account. 
+3. Use Daemon set to deploy the ingress
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress
+spec:
+  selector:
+    matchLabels:
+      app: nginx-ingress
+  template:
+    metadata:
+      labels:
+        app: nginx-ingress
+     #annotations:
+       #prometheus.io/scrape: "true"
+       #prometheus.io/port: "9113"
+    spec:
+      serviceAccountName: nginx-ingress
+      containers:
+      - image: nginx/nginx-ingress:edge
+        imagePullPolicy: Always
+        name: nginx-ingress
+        ports:
+        - name: http
+          containerPort: 80
+          hostPort: 80
+        - name: https
+          containerPort: 443
+          hostPort: 443
+
+4. Path based Routing:
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cafe-ingress
+  namespace: cafe
+spec:
+  rules:
+  - host: cafe.example.com
+    http:
+      paths:
+      - path: /tea
+        backend:
+          serviceName: tea-svc
+          servicePort: 80
+      - path: /coffee
+        backend:
+          serviceName: coffee-svc
+          servicePort: 80
+
+5. 
+Vipin: https://github.com/vipin-k/How-to-setup-SSL-TLS-certificate-on-ingress-controller-for-Kubernetes-Cluster
+Cert Manager: https://github.com/jetstack/cert-manager/releases/download/v0.12.0/cert-manager.yaml
+
+Trouble shooting
+journalctl -xeu docker  | tail 10
+journalctl -xeu kubelet  | tail 10
+
+
+====================================================================================================================
+
+You can query for services on other namespaces by using <service_name>.<namespace_name>.svc.cluster.local. Even if you query for services in the same namespace internally it gets translated to this format.
+
+=====================================================================================================
+A side car in pods:
+#Important for going into the specific container in pods:
+
+kubectl exec -it sidecar-container-demo -c main-container -- /bin/sh
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx-webapp
+  name: nginx-webapp
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx-webapp
+    spec:
+      containers:
+      - image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo echo $(date -u) 'Hi I am from Sidecar container 1' >> /var/log/index.html; sleep 5;done"]
+        name: sidecar-container1
+        resources: {}
+        volumeMounts:
+          - name: var-logs
+            mountPath: /var/log
+      - image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo echo $(date -u) 'Hi I am from Sidecar container 2' >> /var/log/index.html; sleep 5;done"]
+        name: sidecar-container2
+        resources: {}
+        volumeMounts:
+          - name: var-logs
+            mountPath: /var/log
+      - image: nginx
+        name: main-container
+        resources: {}
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - name: var-logs
+            mountPath: /usr/share/nginx/html
+      dnsPolicy: Default
+      volumes:
+      - name: var-logs
+        emptyDir: {}
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-webapp
+  labels:
+    run: nginx-webapp
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: nginx-webapp
+  type: NodePort
+		  
+=====================================================================================================================
