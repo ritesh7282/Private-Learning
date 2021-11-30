@@ -1,0 +1,46 @@
+URL: https://betterprogramming.pub/understanding-docker-container-exit-codes-5ee79a1d58f6	
+docker exit codes:
+
+Exit Code 126: Permission problem or command is not executable
+Exit Code 127: Possible typos in shell script with unrecognizable characters
+Exit Code 0: Absence of an attached foreground process 
+Exit Code 1: Indicates failure due to application error eg: ENTRYPOINT ["java", "jar","smaple.ja"]
+Exit Code 137: Indicates failure as container received SIGKILL (Manual intervention or ‘oom-killer’ [OUT-OF-MEMORY]) - docker kill  | docker inspect  <container-id>
+Exit Code 139: Indicates failure as container received SIGSEGV :SIGSEGV indicates a segmentation fault. This occurs when a program attempts to access a memory location that it’s not allowed to access, or attempts to access a memory location in a way that’s not allowed.
+Exit Code 143: Indicates failure as container received SIGTERM:In this case there was a manual termination that forced the container to exit.
+
+==========================================================================================================================================================
+
+FROM centos
+RUN yum install wget -y;
+RUN mkdir -p /opt/java; \
+    cd /opt/java; \
+    wget https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_linux-x64_bin.tar.gz;  \
+    tar -xvf openjdk-12.0.2_linux-x64_bin.tar.gz; \
+	yum install vim-enhanced -y;  \
+
+RUN cd /etc/profile.d ; \
+	touch jdk.sh; \
+	"export JAVA_HOME=/opt/java/jdk-12.0.2" > jdk.sh; \
+	"export PATH=$JAVA_HOME/bin:$PATH" >> jdk.sh; \
+	source jdk.sh;
+
+
+FROM centos
+
+RUN yum install wget -y;
+RUN mkdir -p /opt/java;
+RUN wget -O /etc/yum.repos.d/jenkins.repo     https://pkg.jenkins.io/redhat-stable/jenkins.repo; 
+RUN    rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key; 
+RUN    yum upgrade -y; 
+RUN    yum install -y java-1.8.0-openjdk; 
+RUN    yum install -y jenkins;
+RUN systemctl daemon-reload;
+RUN systemctl start jenkins;
+
+-====================================================================================================================================
+
+docker run [other options] --entrypoint '/bin/sh' $IMAGE -c 'npm link gulp gulp-sass gulp-sourcemaps'
+
+==============================================================================================================================
+
