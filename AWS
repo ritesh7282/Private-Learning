@@ -1,0 +1,31 @@
+AWS:
+
+default vpc advantages
+A default VPC is suitable for getting started quickly
+y s3 can't be used as root volume ?  
+Object oriented storage 
+SSL conguration in jenkins master?
+Pod info to cloudwatch
+Elastic Search Load balancer
+ALB
+KOPS vs Kubeadm
+KOPS handles the in a more extensive in compared to kubeadm. hence, while installing a cluster with KOPS, it asks for s3, and VPC CIDR and evrything.Whereas KUbeadm is like a quick start.
+
+nat instances vs intenet gateway 
+Nat instance acts as Proxy server for private subnet. Internet gateway is one which provides the connection.
+IPV6 adress
+transit gateway
+How may VPC/region ?
+5 
+features of Application Lb?
+X-found-cluster: ECE proxy uses the header X-found-cluster to know which cluster’s UUID (Universally Unique Identifier) the traffic needs to be routed to. If the load balancer rewrites a URL, make sure the HTTP header X-Found-Cluster gets added. For example: X-found-cluster: d59109b8d542c5c4845679e597810796.
+X-Forwarded-For: Configure load balancers to strip inbound X-Forwarded-For headers and to replace them with the client source IP as seen by the load balancer. This is required to prevent clients from spoofing their IP addresses. Elastic Cloud Enterprise uses X-Forwarded-For for logging client IP addresses and, if you have implemented IP filtering, for traffic management.
+
+Cross Region Replication:
+
+S3 bucket being accessed into another account using "Create Replication Rule". Flow:
+Bucket --> Mgmt --> Create Replication Rule -->Click on "Choose a bucket in another account"  as destination to go for it.
+For it to work, vesioning should be on and it will replicate all the files after all that.
+The permission of source bucket is not replicated to the destination bucket.
+
+
