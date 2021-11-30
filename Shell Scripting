@@ -1,0 +1,50 @@
+find . -type f -mtime -105 -mtime +76
+canary release vs future togal
+canary release --> 2,4,6,25,50,100
+blue green --> 
+CI/CD
+Services in Kubernetes
+Storage classes in kubernetes
+SSH hardening
+
+sudo nano /etc/ssh/sshd_config 
+In this file, look for:
+
+#ClientAliveInterval 0  --> #ClientAliveInterval 300
+sudo systemctl restart sshd
+
+#PermitEmptyPasswords no 
+
+i-node in linux
+SLA vs SLI - service level indicator
+git rebase Vs git merge
+Merge --> merges contents of two branches
+Rebase --> Base one branch with master
+monitoring purpose
+========================================================================
+
+
+Image layering in docker
+pipeline as code
+public key infra
+terraform and terra-grant
+Linux boot
+System load
+Less space for Image
+rebase vs Merge
+
+
+Helm Charts
+Docker
+Linux
+
+=======================================================================
+
+node selector
+kops -node selector
+instance grp in kops
+API server to database connection issue
+--> security grp
+--> telnet the ports
+
+=====================================================================
