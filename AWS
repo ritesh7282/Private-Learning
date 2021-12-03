@@ -28,4 +28,11 @@ Bucket --> Mgmt --> Create Replication Rule -->Click on "Choose a bucket in anot
 For it to work, vesioning should be on and it will replicate all the files after all that.
 The permission of source bucket is not replicated to the destination bucket.
 
+==============================================================================
 
+T- webservers/small Dbs
+R - Memory Optimised
+C- Compute Optimised
+F- Financial Analytics
+G - Graphics intensive
+P- Machine learning
