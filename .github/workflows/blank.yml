@@ -1,0 +1,62 @@
+name: PRAT-CTAP-Jfrog-ECR-Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      AWS_Region:
+        type: choice
+        description: 'AWS Region'
+        required: true
+        options: 
+        - eu-west-1
+      
+      SOURCE_ENVIRONMENT:
+        type: choice
+        description: 'Select Source Environment'
+        required: true
+        options: 
+        - dev-ecr   
+      
+      TARGET_ENVIRONMENT:
+        type: choice
+        description: 'Select Target Environment'
+        required: true
+        options: 
+        - jfrog       
+
+      ARTIFACTORY_URL:
+        description: 'Provide Jfrog Artifactory URL'
+        required: true
+        default: 'https://prat-ctap-shared-market-dev.dock.merck.com'
+
+      ARTIFACTORY_REPO:
+        description: 'Provide Jfrog Artifactory Repository'
+        required: true
+        default: ''
+      
+      ECR_REPOSITORY:
+        description: 'Provide ECR REpository name eg prat-ctap-united-states'
+        required: true
+        default: ''
+
+      ECR_IMAGE_TAG:
+        description: 'Provide Image Tag eg all-product-ctap-destination-v2'
+        required: true
+        default: ''
+
+
+jobs:
+
+  build:  
+    runs-on: [self-hosted]
+    env:
+      Docker_Config: /opt/jenkins/workspace/container-test/docker_config
+      AWS_Credentials: ${{ secrets.DEV_ECR_USERNAME}}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: |
+        echo "${{env.AWS_Credentials}}"
+        echo "${{env.Docker_Config}}"
+        echo "${{inputs.AWS_Region}}"
