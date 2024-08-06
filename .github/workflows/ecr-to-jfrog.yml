@@ -2,6 +2,11 @@ name: PRAT-CTAP-Jfrog-ECR-Dev
 
 on:
   workflow_dispatch:
+
+jobs:
+
+  build:  
+    runs-on: ubuntu-latest
     inputs:
       AWS_Region:
         type: choice
@@ -43,12 +48,6 @@ on:
         description: 'Provide Image Tag eg all-product-ctap-destination-v2'
         required: true
         default: ''
-
-
-jobs:
-
-  build:  
-    runs-on: ubuntu
     env:
       Docker_Config: /opt/jenkins/workspace/container-test/docker_config
       AWS_Credentials: ${{ secrets.DEV_ECR_USERNAME}}
