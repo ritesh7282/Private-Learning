@@ -48,7 +48,7 @@ on:
 jobs:
 
   build:  
-    runs-on: ubuntu-latest
+    runs-on: ubuntu
     env:
       Docker_Config: /opt/jenkins/workspace/container-test/docker_config
       AWS_Credentials: ${{ secrets.DEV_ECR_USERNAME}}
