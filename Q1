@@ -11,7 +11,7 @@ Kubernetes Security
 
 https://www.xelon.ch/en/knowledge-base/setup-kubernetes-cluster/
 https://skalable.net/blogs/technology/jenkins_ha.html
-
+https://stackoverflow.com/questions/57819539/github-actions-how-to-share-a-calculated-value-between-job-steps
 
 		
 Security Grp: (Security group for Kubernetes ELB a1594e70dc21511eaa8eb12f9eb23efc (ingress-nginx/ingress-nginx) )
