@@ -60,3 +60,12 @@ jobs:
         echo "${{env.AWS_Credentials}}"
         echo "${{env.Docker_Config}}"
         echo "${{inputs.AWS_Region}}"
+
+    - name: Replacing variable
+      run: |
+        ${{inputs.AWS_Region}} = $(echo ${{inputs.AWS_Region}} | sed 's/-/_/g')
+        echo "${{inputs.AWS_Region}}"
+
+    - name: Replacing variable
+      run:
+        echo "${{inputs.AWS_Region}}"
