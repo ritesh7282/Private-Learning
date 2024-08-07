@@ -72,36 +72,17 @@ jobs:
         echo "$ECR_IMAGE_TAG" 
         echo "ECR_IMAGE_TAG=$ECR_IMAGE_TAG" >> $GITHUB_ENV
 
-    - name: Accesssing all the variables 
+
+    - name: Accesssing all the variables, Check aws-cli Version and modifying files permissions 
       run: |
         echo "${{env.ECR_REPOSITORY}}"
         echo "${{env.ECR_IMAGE_TAG}}"
-        aws --version
-
-
-    - name: Build the Docker image
-      run: |
-        echo "${{env.AWS_Credentials}}"
-        echo "${{env.Docker_Config}}"
         echo "${{inputs.AWS_Region}}"
+        echo "${{inputs.SOURCE_ENVIRONMENT}}"
+        echo "${{inputs.TARGET_ENVIRONMENT}}"
+        echo "${{inputs.ARTIFACTORY_URL}}"
+        echo "${{inputs.ARTIFACTORY_REPO}}"
+        aws --version
+        echo "chmod 755 ctap-devops/scripts/awsLogin.sh"
+        echo "chmod 755 ctap-devops/scripts/infra.sh"
 
-    - name: Replacing variable
-      run: |
-        echo "${{inputs.AWS_Region}} | sed 's/-/_/g'"
-        Region=$(echo ${{inputs.AWS_Region}} | sed 's/-/_/g')
-        echo "$Region"
-        echo "Region=$Region" >> $GITHUB_ENV
-        echo "${{ env.Region }}"
-
-    - name: Working on Github output
-      id: vars
-      run: |
-        Reg="e-u-t"
-        Reg=$(echo $Reg | sed 's/-/_/g')
-        echo "$Reg"
-        echo "Reg=$Reg" >> $GITHUB_OUTPUT
-
-    - name: Accesing variable
-      run: |
-        echo "${{env.Region}}"
-        echo "${{steps.vars.outputs.Reg}}"
