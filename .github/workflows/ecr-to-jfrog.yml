@@ -54,10 +54,13 @@ jobs:
       
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        aws-version: latest
-    - run: aws --version
+    - name: Installing AWS CLI
+      id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@v1
+      
+    -  run: |
+        aws --version
+        
     - name: Build the Docker image
       run: |
         echo "${{env.AWS_Credentials}}"
