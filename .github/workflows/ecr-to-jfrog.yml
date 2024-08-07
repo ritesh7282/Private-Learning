@@ -63,9 +63,9 @@ jobs:
 
     - name: Replacing variable
       run: |
-        echo "AWS_Region=${{inputs.AWS_Region}} | sed 's/-/_/g'"
+        echo "AWS_Region=${{inputs.AWS_Region}} | sed 's/-/_/g'" >> $GITHUB-ENV
         echo "${{inputs.AWS_Region}}"
 
     - name: Replacing variable
       run:
-        echo "${{inputs.AWS_Region}}"
+        echo "${{env.AWS_Region}}"
