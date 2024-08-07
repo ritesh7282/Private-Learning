@@ -63,7 +63,7 @@ jobs:
 
     - name: Replacing variable
       run: |
-        AWS_Region = $(echo ${{inputs.AWS_Region}} | sed 's/-/_/g')
+        echo ${{inputs.AWS_Region}} | sed 's/-/_/g'
         echo "${{inputs.AWS_Region}}"
 
     - name: Replacing variable
