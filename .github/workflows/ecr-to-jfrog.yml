@@ -68,6 +68,7 @@ jobs:
         echo "${{ env.Region }}"
 
     - name: Working on Github output
+      id: vars
       run: |
         Reg="e-u-t"
         Reg=$(echo $Reg | sed 's/-/_/g')
@@ -75,5 +76,6 @@ jobs:
         echo "Reg=$Reg" >> $GITHUB_OUTPUT
 
     - name: Accesing variable
-      run:
+      run: |
         echo "${{env.AWS_Region}}"
+        echo "${{steps.vars.outputs.Reg}}"
