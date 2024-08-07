@@ -32,7 +32,7 @@ on:
       ARTIFACTORY_REPO:
         description: 'Provide Jfrog Artifactory Repository'
         required: true
-        default: ''
+        default: 'prat-ctap-shared-market-dev.dock.merck.com'
       
       ECR_REPOSITORY:
         description: 'Provide ECR REpository name eg prat-ctap-united-states'
@@ -51,10 +51,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       Docker_Config: /opt/jenkins/workspace/container-test/docker_config
-      AWS_Credentials: ${{ secrets.DEV_ECR_USERNAME}}
-
+      
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        aws-version: latest
+    - run: aws --version
     - name: Build the Docker image
       run: |
         echo "${{env.AWS_Credentials}}"
