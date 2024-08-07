@@ -64,7 +64,9 @@ jobs:
     - name: Replacing variable
       run: |
         echo "${{inputs.AWS_Region}} | sed 's/-/_/g'"
-        echo "Region=${{inputs.AWS_Region}} | sed 's/-/_/g'" >> $GITHUB_ENV
+        Region=$(${{inputs.AWS_Region}} | sed 's/-/_/g')
+        echo "$Region"
+        echo "Region=$Region" >> $GITHUB_ENV
         echo "${{ env.Region }}"
 
     - name: Working on Github output
@@ -77,5 +79,5 @@ jobs:
 
     - name: Accesing variable
       run: |
-        echo "${{env.AWS_Region}}"
+        echo "${{env.Region}}"
         echo "${{steps.vars.outputs.Reg}}"
