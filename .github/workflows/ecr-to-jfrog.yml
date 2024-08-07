@@ -61,14 +61,14 @@ jobs:
 
     - name: Working with the ECR Repository variables
       run: |
-        ECR_REPOSITORY=$(echo ${{inputs.ECR_REPOSITORY_INPUT}} | sed 's/-/_/g')
+        ECR_REPOSITORY=$(echo ${{inputs.ECR_REPOSITORY_INPUT}} | sed 's/_/-/g')
         echo "$ECR_REPOSITORY" 
         echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> $GITHUB_ENV
 
 
     - name: Working with the ECR Repository variables
       run: |
-        ECR_IMAGE_TAG=$(echo ${{inputs.ECR_IMAGE_TAG_INPUT}} | sed 's/-/_/g')
+        ECR_IMAGE_TAG=$(echo ${{inputs.ECR_IMAGE_TAG_INPUT}} | sed 's/_/-/g')
         echo "$ECR_IMAGE_TAG" 
         echo "ECR_IMAGE_TAG=$ECR_IMAGE_TAG" >> $GITHUB_ENV
 
