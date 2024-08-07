@@ -70,7 +70,7 @@ jobs:
     - name: Working on Github output
       run: |
         Reg="e-u-t"
-        Reg=$(echo $Reg | sed 's/-/_/g")
+        Reg=$(echo $Reg | sed 's/-/_/g')
         echo "$Reg"
         echo "Reg=$Reg" >> $GITHUB_OUTPUT
 
